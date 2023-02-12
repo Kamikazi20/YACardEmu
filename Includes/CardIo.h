@@ -60,12 +60,13 @@ public:
 		bool waitingForCard = false;
 		bool reportDispenserEmpty = false;
 		std::string mech = "C1231LR";
+		CardIo::StatusCode status = CardIo::StatusCode::Okay;
 	};
 
 	CardIo(CardIo::Settings *settings);
 	virtual ~CardIo() = default;
-	CardIo::StatusCode BuildPacket(std::vector<uint8_t> &readBuffer);
-	CardIo::StatusCode ReceivePacket(std::vector<uint8_t> &writeBuffer);
+	void BuildPacket(std::vector<uint8_t> &readBuffer);
+	void ReceivePacket(std::vector<uint8_t> &writeBuffer);
 
 	CardIo::Settings *m_cardSettings = nullptr;
 	std::string printName = "print.bin";

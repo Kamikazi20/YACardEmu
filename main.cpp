@@ -143,35 +143,30 @@ int main()
 		return 1;
 	}
 
-	// TODO: Verify service is actually running
 	std::unique_ptr<WebIo> webHandler = std::make_unique<WebIo>(&globalSettings.card, globalSettings.webPort, &running);
-	webHandler->Spawn();
-
-	// TODO: These don't need to be here, put them in their respective classes
-	SerIo::Status serialStatus = SerIo::Status::Okay;
-	CardIo::StatusCode cardStatus = CardIo::StatusCode::Okay;
-	std::vector<uint8_t> readBuffer{};
-	std::vector<uint8_t> writeBuffer{};
+	if (!webHandler->Spawn()) {
+		return 1;
+	}
 
 	while (running) {
-		serialStatus = serialHandler->Read(readBuffer);
+		serialHandler->Read();
 
 		// TODO: device read/write should probably be a separate thread
-		if (serialStatus != SerIo::Status::Okay && readBuffer.empty()) {
+		if (serialHandler->m_portSettings->status != SerIo::Status::Okay && serialHandler->m_readBuffer.empty()) {
 			std::this_thread::sleep_for(delay);
 			continue;
 		}
 
-		cardStatus = cardHandler->ReceivePacket(readBuffer);
+		cardHandler->ReceivePacket(serialHandler->m_readBuffer);
 
-		if (cardStatus == CardIo::Okay) {
+		if (cardHandler->m_cardSettings->status == CardIo::Okay) {
 			// We need to send our ACK as quick as possible
 			serialHandler->SendAck();
-		} else if (cardStatus == CardIo::ServerWaitingReply) {
+		} else if (cardHandler->m_cardSettings->status == CardIo::ServerWaitingReply) {
 			// Do not reply until we get this command
-			writeBuffer.clear();
-			cardHandler->BuildPacket(writeBuffer);
-			serialHandler->Write(writeBuffer);
+			serialHandler->m_writeBuffer.clear();
+			cardHandler->BuildPacket(serialHandler->m_writeBuffer);
+			serialHandler->Write();
 		}
 
 		spdlog::dump_backtrace();

@@ -28,6 +28,7 @@
 #include <utility>
 #include <thread>
 #include <atomic>
+#include <thread>
 
 #include "CardIo.h"
 #include "base64.h"
@@ -42,11 +43,12 @@ public:
 	~WebIo();
 
 	void StartServer();
-	void Spawn();
+	bool Spawn();
 
 	int m_port = 0;
 	CardIo::Settings *m_card = nullptr;
 	std::atomic<bool> *g_running = nullptr;
+
 private:
 	httplib::Server m_svr{};
 

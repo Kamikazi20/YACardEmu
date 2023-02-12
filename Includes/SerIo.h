@@ -49,6 +49,7 @@ public:
 		std::string devicePath{};
 		int baudRate = 9600;
 		sp_parity parity = SP_PARITY_NONE;
+		SerIo::Status status = SerIo::Status::Okay;
 	};
 
 	SerIo::Settings *m_portSettings = nullptr;
@@ -57,9 +58,12 @@ public:
 	~SerIo();
 
 	bool Open();
-	SerIo::Status Read(std::vector<uint8_t> &buffer);
-	SerIo::Status Write(std::vector<uint8_t> &buffer);
+	void Read();
+	void Write();
 	void SendAck();
+
+	std::vector<uint8_t> m_readBuffer{};
+	std::vector<uint8_t> m_writeBuffer{};
 private:
 #ifdef _WIN32
 	HANDLE m_pipeHandle = INVALID_HANDLE_VALUE;
@@ -68,8 +72,6 @@ private:
 	bool m_isPipe = false;
 	sp_port *m_portHandle = nullptr;
 	sp_port_config *m_portConfig = nullptr;
-
-	std::vector<uint8_t> m_buffer{};
 };
 
 #endif

@@ -766,7 +766,7 @@ uint8_t CardIo::GetByte(uint8_t **buffer)
 	return value;
 }
 
-CardIo::StatusCode CardIo::ReceivePacket(std::vector<uint8_t> &readBuffer)
+void CardIo::ReceivePacket(std::vector<uint8_t> &readBuffer)
 {
 	spdlog::debug("CardIo::ReceivePacket: ");
 
@@ -779,15 +779,18 @@ CardIo::StatusCode CardIo::ReceivePacket(std::vector<uint8_t> &readBuffer)
 		spdlog::debug("ENQ");
 		readBuffer.erase(readBuffer.begin());
 		HandlePacket();
-		return ServerWaitingReply;
+		m_cardSettings->status = ServerWaitingReply;
+		return;
 	} else if (sync != START_OF_TEXT) {
 		spdlog::warn("Missing STX!");
 		readBuffer.erase(readBuffer.begin()); // SLOW!
-		return SyncError;
+		m_cardSettings->status = SyncError;
+		return;
 	}
 
 	if (readBuffer.size() < 8) {
-		return SyntaxError;
+		m_cardSettings->status = SyntaxError;
+		return;
 	}
 
 	uint8_t count = GetByte(&buffer);
@@ -795,13 +798,15 @@ CardIo::StatusCode CardIo::ReceivePacket(std::vector<uint8_t> &readBuffer)
 	// count counts itself but readBuffer will have both the STX and sum, we need to skip these.
 	if (count > readBuffer.size() - 2) {
 		spdlog::debug("Waiting for more data");
-		return SizeError;
+		m_cardSettings->status = SizeError;
+		return;
 	}
 
 	if (readBuffer.at(count) != END_OF_TEXT) {
 		spdlog::debug("Missing ETX!");
 		readBuffer.erase(readBuffer.begin(), readBuffer.begin() + count);
-		return SyntaxError;
+		m_cardSettings->status = SyntaxError;
+		return;
 	}
 
 	// Checksum is calcuated by xoring the entire packet excluding the start and the end
@@ -828,7 +833,8 @@ CardIo::StatusCode CardIo::ReceivePacket(std::vector<uint8_t> &readBuffer)
 	// Verify checksum - skip packet if invalid
 	if (packet_checksum != actual_checksum) {
 		spdlog::warn("Read checksum bad!");
-		return ChecksumError;
+		m_cardSettings->status = ChecksumError;
+		return;
 	}
 
 	spdlog::debug("{:Xn}", spdlog::to_hex(currentPacket));
@@ -855,10 +861,10 @@ CardIo::StatusCode CardIo::ReceivePacket(std::vector<uint8_t> &readBuffer)
 	commandBuffer.emplace_back(static_cast<uint8_t>(status.p));
 	commandBuffer.emplace_back(static_cast<uint8_t>(status.s));
 
-	return Okay;
+	m_cardSettings->status = Okay;
 }
 
-CardIo::StatusCode CardIo::BuildPacket(std::vector<uint8_t> &writeBuffer)
+void CardIo::BuildPacket(std::vector<uint8_t> &writeBuffer)
 {
 	spdlog::debug("CardIo::BuildPacket: ");
 
@@ -890,5 +896,5 @@ CardIo::StatusCode CardIo::BuildPacket(std::vector<uint8_t> &writeBuffer)
 
 	spdlog::debug("{:Xn}", spdlog::to_hex(writeBuffer));
 
-	return Okay;
+	m_cardSettings->status = Okay;
 }
