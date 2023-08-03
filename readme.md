@@ -72,8 +72,38 @@ cp ../config.ini.sample config.ini
 Windows
 
 ```
-cd Release
-YACardEmu.exe
+Download the Binary here - https://github.com/GXTX/YACardEmu/tags
+Extract Files to C:\YaCardEmu
+Make a copy of config.ini.sample
+Rename it to config.ini
+Modify Config.ini - 
+(Below is a Windows Example that uses Com3, The card path is C:\docwe_c, the reader is a C1231BR, Set Baud Rate at 9600 & Even
+
+[config]
+; basepath MUST end in a trailing slash!
+;basepath = /home/wutno/cards/
+;Very Important you must Specify a location and there has to be a folder. If the folder is missing you will get an error.
+basepath = C:\docwe_c
+; Linux
+;serialpath = /dev/ttyUSB0
+; Windows
+serialpath = COM3
+;serialpath = \.\pipe\YACardEmu
+; Which device should we emulate?
+; C1231LR / C1231BR / S31R
+targetdevice = C1231BR
+;
+; Optional
+;
+serialbaud = 9600
+;Acceptable even & none
+serialparity = even
+apiport = 8080
+autoselectedcard = card.bin
+
+Once the Config.ini is updated 
+Double click YACardEmu.exe
+
 ```
 
 Running On Hardware
@@ -109,6 +139,22 @@ SEGA NAOMI
 ```
 Derby Owners Club World Edition : CRP-1231BR-10 | 9600 even
 †Requires SEGA P/N 838-13661 RS232 converter PCB
+
+Cable - https://www.amazon.com/dp/B075YGKFC1?ref=ppx_yo2ov_dt_b_product_details&th=1
+USB RS232 Pin out
+Notes you only need 3 wires | CTS/RTS Bridged | You will have to modify a cable|
+Pin 2 RXD
+Pin 3 TXD
+Pin 5 GND
+**Pin 7 CTS Wire this together with pin 8
+Pin 8 RTS Wire this together with pin 7
+Looks like this
+![Pining](https://github.com/GXTX/YACardEmu/assets/8756824/8d7a73a0-fb75-4064-8af9-9fc43cc80690)
+
+The flow should be like this : Computer -> USB to RS232 ->RS422 ->Naomi
+![bridge_RTX_CTS](https://github.com/GXTX/YACardEmu/assets/8756824/891319d4-67ea-40c2-9e8e-c7437dd4f451)
+
+
 ```
 
 SEGA NAOMI 2
